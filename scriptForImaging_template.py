@@ -931,7 +931,7 @@ import glob
 
 myimages = glob.glob("*.pbcor")
 for image in myimages:
-    exportfits(imagename=image, fitsimage=image+'.fits',overwrite=True)
+    exportfits(imagename=image, fitsimage=image.replace(".image","")+'.fits',overwrite=True)
 
 myimages = glob.glob("*.pb")
 for image in myimages:
