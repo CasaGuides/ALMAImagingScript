@@ -34,32 +34,35 @@
 ######################################
 # Splitting off the calibrated data
 
-#>>> Produce a *.split.cal file from pipeline products to match historic
+#>>> Produce a *ms.split.cal file from pipeline products to match historic
 #>>> imaging procedure. If you already have a split.cal file, you can
 #>>> skip this step.
 
 import glob
 
-vislist = glob.glob('*[!_t].ms')  # match full ms, not target.ms
+# match full ms, not target.ms or targets.ms
+vislist = glob.glob('*[!ts].ms')
 
 for myvis in vislist:
-
     msmd.open(myvis)
+
     targetspws = msmd.spwsforintent('OBSERVE_TARGET*')  
-    sciencespws = []                                      
+    sciencespws = []
+                              
     for myspw in targetspws:                               
-        if msmd.nchan(myspw)>4:
+        if msmd.nchan(myspw) > 4:
             sciencespws.append(myspw)
-    sciencespws = ','.join(map(str,sciencespws))
+
+    sciencespws = ','.join(map(str, sciencespws))
+
     msmd.close()
     
-    split(vis=myvis,outputvis=myvis+'.split.cal',spw=sciencespws)
+    split(vis=myvis, outputvis=f'{myvis}.split.cal', spw=sciencespws)
 
 ########################################
 # Getting a list of ms files to image
 
 import glob
-
 vislist=glob.glob('*.ms.split.cal')
 
 ##################################################
@@ -70,13 +73,14 @@ vislist=glob.glob('*.ms.split.cal')
 
 # Save original flags
 for vis in vislist:
-    flagmanager(vis=vis,
-                mode='save',
-                versionname='original_flags')
+    flagmanager(vis=vis, mode='save', versionname='original_flags')
 
 # Inspect the science data
-fieldlist = ['0'] # change to list of science data fields to inspect
-spwlist = ['0','1','2','3'] # change to list of science spws to inspect
+# change to list of science data fields to inspect
+fieldlist = ['0']
+
+# change to list of science spws to inspect
+spwlist = ['0', '1', '2', '3']
 
 #>>> This is mainly for convenience. Note that if your field names
 #>>> change between executions, you will need to create a separate loop
@@ -84,18 +88,18 @@ spwlist = ['0','1','2','3'] # change to list of science spws to inspect
 for vis in vislist:
     for field in fieldlist:
         for spw in spwlist:
-            plotms(vis=vis,xaxis='uvwave',yaxis='amp',avgtime='3e8',
-                   field=field,spw=spw)
+            plotms(vis=vis, xaxis='uvwave', yaxis='amp', avgtime='3e8',
+                   field=field, spw=spw)
             input("push enter to continue")
-            plotms(vis=vis,xaxis='chan',yaxis='amp',avgtime='3e8',
-                   field=field,spw=spw)
+            plotms(vis=vis, xaxis='chan', yaxis='amp', avgtime='3e8',
+                   field=field, spw=spw)
             input("push enter to continue")
 
 # Flag the offending data. See flagdata help for more info.
-#flagdata(vis='',mode='manual',action='apply',flagbackup=False)
+# flagdata(vis='', mode='manual', action='apply', flagbackup=False)
 
 # If you need to restore original flags, use the following command.
-#flagmanager(vis='',mode='restore',versionname='original_flags')
+# flagmanager(vis='', mode='restore', versionname='original_flags')
 
 ########################################
 # Flux Equalization [OPTIONAL]
@@ -109,7 +113,7 @@ for vis in vislist:
 #>>> from multiple executions).
 
 # generating the script -- REMOVE BEFORE SENDING TO PI
-es.generateReducScript(['uid_FIRST-EB.ms.split.cal','uid_SECOND-EB.ms.split.cal',(etc)], step='fluxcal')
+# es.generateReducScript(['uid_FIRST-EB.ms.split.cal', 'uid_SECOND-EB.ms.split.cal', (etc)], step='fluxcal')
 
 #>>> check that the commands in scriptForFluxCalibration.py is correct
 #>>> and make any necessary modifications.
@@ -133,34 +137,39 @@ es.generateReducScript(['uid_FIRST-EB.ms.split.cal','uid_SECOND-EB.ms.split.cal'
 # multiple spws associated with a single rest frequency will not be
 # regridded to a single spectral window in the ms.
 
-concatvis='calibrated.ms'
+concatvis = 'calibrated.ms'
 
 rmtables(concatvis)
-os.system('rm -rf ' + concatvis + '.flagversions')
+os.system(f'rm -rf {concatvis}.flagversions')
 concat(vis=vislist,
-       #forcesingleephemfield='Uranus', # uncomment this line and insert source name if imaging an ephemeris object
+       # forcesingleephemfield='Uranus', # uncomment this line and insert source name if imaging an ephemeris object
        concatvis=concatvis)
 
 
 ###################################
 # Splitting off science target data
 
-#>>> Uncomment following line for single executions
+# Uncomment following line for single executions:
 # concatvis = vislist[0]
 
-#>>> Uncomment following line for multiple executions
-# concatvis='calibrated.ms'
+# Uncomment following line for multiple executions:
+# concatvis = 'calibrated.ms'
 
 #>>> Doing the split.  If multiple data sets were rescaled using
 #>>> scriptForFluxCalibration.py, need to get datacolumn='corrected'
 
-sourcevis='calibrated_source.ms'
+sourcevis = 'calibrated_source.ms'
+
 rmtables(sourcevis)
-os.system('rm -rf ' + sourcevis + '.flagversions')
-split(vis=concatvis,
-      intent='*TARGET*', # split off the target sources
-      outputvis=sourcevis,
-      datacolumn='data')
+os.system(f'rm -rf {sourcevis}.flagversions')
+
+# split off the target sources
+split(
+    vis=concatvis,
+    intent='*TARGET*',
+    outputvis=sourcevis,
+    datacolumn='data',
+    )
 
 ###############################################################
 # Regridding spectral windows [OPTIONAL]
@@ -175,32 +184,35 @@ split(vis=concatvis,
 #>>> parameters later when you clean to avoid clean regridding the image
 #>>> a second time.
 
-sourcevis='calibrated_source.ms'
-regridvis='calibrated_source_regrid.ms'
-veltype = 'radio' # Keep set to radio. See notes in imaging section.
-width = '0.23km/s' # due to bug in cvel2/mstransform, do not regrid > 2 channels
-nchan = -1 # leave this as the default
-mode='velocity' # see science goals in the OT
-start='' # leave this as the default
-outframe = 'bary' # velocity reference frame. see science goals in the OT.
-restfreq='115.27120GHz' # rest frequency of primary line of interest.
-field = '4' # select science fields.
-spw = '0,5,10' # spws associated with a single rest frequency. Do not attempt to combine spectral windows associated with different rest frequencies. This will take a long time to regrid and most likely isn't what you want.
+sourcevis = 'calibrated_source.ms'
+regridvis = 'calibrated_source_regrid.ms'
+veltype = 'radio'               # Keep set to radio. See notes in imaging section.
+width = '0.23km/s'              # due to bug in cvel2/mstransform, do not regrid > 2 channels
+nchan = -1                      # leave this as the default
+mode = 'velocity'               # see science goals in the OT
+start = ''                      # leave this as the default
+outframe = 'bary'               # velocity reference frame. see science goals in the OT.
+restfreq = '115.27120GHz'       # rest frequency of primary line of interest.
+field = '4'                     # select science fields.
+spw = '0,5,10'                  # spws associated with a single rest frequency.
+                                # Do not attempt to combine spectral windows associated with different rest frequencies.
+                                # This will take a long time to regrid and most likely isn't what you want.
 
 rmtables(regridvis)
-os.system('rm -rf ' + regridvis + '.flagversions')
+os.system(f'rm -rf {regridvis}.flagversions')
     
-cvel2(vis=sourcevis,
-     field=field,
-     outputvis=regridvis,
-     spw=spw,
-     mode=mode,
-     nchan=nchan,
-     width=width,
-     start=start,
-     restfreq=restfreq,
-     outframe=outframe,
-     veltype=veltype)
+cvel2(
+    vis=sourcevis,
+    field=field,
+    outputvis=regridvis,
+    spw=spw,
+    mode=mode,
+    nchan=nchan,
+    width=width,
+    start=start,
+    restfreq=restfreq,
+    outframe=outframe,
+    veltyp
 
 #>>> If you have multiple sets of spws that you wish you combine, just
 #>>> repeat the above process with spw set to the other values.
@@ -208,11 +220,11 @@ cvel2(vis=sourcevis,
 ############################################
 # Rename and backup data set
 
-#>>> If you haven't regridded:
-# os.system('mv -i ' + sourcevis + ' ' + 'calibrated_final.ms')
+# Uncomment if you haven’t regridded
+# os.system(f'mv -i {sourcevis} calibrated_final.ms')
 
-#>>> If you have regridded:
-# os.system('mv -i ' + regridvis + ' ' + 'calibrated_final.ms') 
+# Uncomment if you have regridded
+# os.system(f'mv -i {regridvis} calibrated_final.ms')
 
 # At this point you should create a backup of your final data set in
 # case the ms you are working with gets corrupted by clean. 
@@ -226,4 +238,4 @@ cvel2(vis=sourcevis,
 ############################################
 # Output a listobs file
 
-listobs(vis='calibrated_final.ms',listfile='calibrated_final.ms.listobs.txt') 
+listobs(vis='calibrated_final.ms', listfile='calibrated_final.ms.listobs.txt')
