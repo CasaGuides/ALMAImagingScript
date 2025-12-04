@@ -2,7 +2,7 @@
 #>>>                        TEMPLATE IMAGING PREP SCRIPT                                   #
 #>>> ======================================================================================#
 #>>>
-#>>> Updated: Wed Apr  7 09:25:24 EDT 2021
+#>>> Updated: Thu Dec 4 2025
 
 #>>>
 #>>> Lines beginning with '#>>>' are instructions to the data imager
@@ -63,7 +63,7 @@ for myvis in vislist:
 # Getting a list of ms files to image
 
 import glob
-vislist=glob.glob('*.ms.split.cal')
+vislist = glob.glob('*.ms.split.cal')
 
 ##################################################
 # Flag Bad Data [OPTIONAL]
