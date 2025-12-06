@@ -145,7 +145,6 @@ concat(vis=vislist,
        # forcesingleephemfield='Uranus', # uncomment this line and insert source name if imaging an ephemeris object
        concatvis=concatvis)
 
-
 ###################################
 # Splitting off science target data
 
@@ -212,7 +211,8 @@ cvel2(
     start=start,
     restfreq=restfreq,
     outframe=outframe,
-    veltyp
+    veltype=veltype,
+    )
 
 #>>> If you have multiple sets of spws that you wish you combine, just
 #>>> repeat the above process with spw set to the other values.
