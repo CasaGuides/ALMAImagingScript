@@ -212,7 +212,7 @@ cvel2(
     restfreq=restfreq,
     outframe=outframe,
     veltype=veltype,
-    )
+)
 
 #>>> If you have multiple sets of spws that you wish you combine, just
 #>>> repeat the above process with spw set to the other values.
